@@ -42,7 +42,7 @@ class Attack:
         self._is_splash = is_splash
 
     @property
-    def is_physical(self):
+    def is_physical(self) -> bool:
         return self._is_physical
 
     @property
@@ -50,15 +50,15 @@ class Attack:
         return self._damage_per_token
 
     @property
-    def is_splash(self):
+    def is_splash(self) -> bool:
         return self._is_splash
 
     @property
-    def max_tokens(self):
+    def max_tokens(self) -> int:
         return self._max_tokens
 
     @property
-    def probability_per_token(self):
+    def probability_per_token(self) -> float:
         return self._probability_per_token
 
     def tokens_to_kill(self, character: Character) -> int:
@@ -73,15 +73,15 @@ class Attack:
     def can_kill_in_one_turn(self, character: Character) -> bool:
         return self.max_tokens <= self.tokens_to_kill(character)
 
-    def get_true_damage(self, character: Character, tokens: int):
+    def get_true_damage(self, character: Character, tokens: int) -> int:
         reduction = self.get_character_reduction(character)
         damage = (self.damage_per_token * tokens) - reduction
         return round(damage) if damage > 0 else 0
 
-    def get_character_reduction(self, character: Character):
+    def get_character_reduction(self, character: Character) -> int:
         return character.armor if self.is_physical else character.resistance
 
-    def get_character_true_health(self, character: Character):
+    def get_character_true_health(self, character: Character) -> int:
         return character.health + self.get_character_reduction(character)
 
 
