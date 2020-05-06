@@ -30,6 +30,9 @@ class Character:
     def is_dead(self) -> bool:
         return self.health > 0
 
+    def damage(self, attack: "Attack", tokens: int):
+        self._health -= attack.get_true_damage(self, tokens)
+
 
 class Attack:
 
