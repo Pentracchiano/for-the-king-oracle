@@ -8,7 +8,7 @@ sct = mss.mss()
 # Part of the screen to capture: try numpy slicing to improve performance
 tokens_rect = {"top": 450, "left": 700, "width": 550, "height": 160}
 damage_rect = {"top": 720, "left": 810, "width": 130, "height": 70}
-accuracy_rect = {"top": 725, "left": 960, "width": 78, "height": 45}
+accuracy_rect = {"top": 725, "left": 960, "width": 130, "height": 45}
 
 MEDIA_ROOT = 'media/'
 NUMBERS_ROOT = MEDIA_ROOT + 'numbers/'
@@ -34,12 +34,26 @@ def classify_digit(image):
     return number
 
 
+def find_template_in_image(image, template):
+    processed = cv2.matchTemplate(image, template, cv2.TM_CCORR)
+    max_loc = cv2.minMaxLoc(processed)[3]
+    return max_loc
+
+
+def remove_template_from_image(image, template):
+    template_position = find_template_in_image(image, template)
+    x = template_position[0]
+    return image[:, :x]
+
+
 def extract_digits(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = cv2.GaussianBlur(image, (3, 3), 0)
     _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    # image = cv2.erode(image, kernel)
+
+    percentage_image = cv2.imread(MEDIA_ROOT + 'percentage.png', cv2.IMREAD_GRAYSCALE)
+    image = remove_template_from_image(image, percentage_image)
+
     n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(image, connectivity=8)
     roi_list = []
     for label in range(1, n_labels):
