@@ -7,7 +7,7 @@ import os
 sct = mss.mss()
 # Part of the screen to capture: try numpy slicing to improve performance
 tokens_rect = {"top": 450, "left": 700, "width": 550, "height": 160}
-damage_rect = {"top": 720, "left": 810, "width": 130, "height": 70}
+damage_rect = {"top": 725, "left": 810, "width": 100, "height": 45}
 accuracy_rect = {"top": 725, "left": 960, "width": 130, "height": 45}
 
 MEDIA_ROOT = 'media/'
@@ -81,11 +81,18 @@ def extract_components(image):
     return roi_list
 
 
-def extract_digits(image):
-    image = preprocess_image(image)
-
+def remove_percentage(image):
     percentage_image = cv2.imread(MEDIA_ROOT + 'percentage.png', cv2.IMREAD_GRAYSCALE)
     image = remove_template_from_image(image, percentage_image)
+    return image
+
+
+def extract_digits(image, additional_preprocessing=None):
+    image = preprocess_image(image)
+
+    if additional_preprocessing:
+        image = additional_preprocessing(image)
+
     return extract_components(image)
 
 
@@ -100,26 +107,31 @@ def read_number_from_digit_images(digit_list):
                 i += 1
         return num
 
+
 count = 0
 while "Screen capturing":
     last_time = time.time()
 
     # Get raw pixels from the screen, save it to a Numpy array
     accuracy_image = np.array(sct.grab(accuracy_rect))
-    # damage_image = np.array(sct.grab(damage_rect))
+    damage_image = np.array(sct.grab(damage_rect))
     # tokens_image = np.array(sct.grab(tokens_rect))
 
     # preprocess accuracy_image
-    roi_list = extract_digits(accuracy_image)
+    roi_list = extract_digits(accuracy_image, additional_preprocessing=remove_percentage)
     num = read_number_from_digit_images(roi_list)
 
+    # preprocess damage_image
+    damage_rois = extract_digits(damage_image)
+    damage_num = read_number_from_digit_images(damage_rois)
+
     white = np.full((28, 28, 1), 255, dtype=np.uint8)
-    img = cv2.vconcat([white] + roi_list)
-    img = cv2.putText(img, str(num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+    img = cv2.vconcat([white] + damage_rois)
+    img = cv2.putText(img, str(damage_num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
     cv2.imshow("rois and number", img)
-    print(num)
+    print(damage_num)
     if cv2.waitKey(25) & 0xFF == ord("s"):
-        for roi in roi_list:
+        for roi in damage_rois:
             cv2.imwrite(f"number_{count}.png", roi)
             count += 1
 
