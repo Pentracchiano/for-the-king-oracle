@@ -46,14 +46,22 @@ def remove_template_from_image(image, template):
     return image[:, :x]
 
 
-def extract_digits(image):
+def preprocess_image(image):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = cv2.GaussianBlur(image, (3, 3), 0)
     _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return image
 
-    percentage_image = cv2.imread(MEDIA_ROOT + 'percentage.png', cv2.IMREAD_GRAYSCALE)
-    image = remove_template_from_image(image, percentage_image)
 
+def resize_roi(roi):
+    roi = cv2.resize(roi, (22, 22))
+    roi = 255 - roi
+    roi = cv2.copyMakeBorder(roi, 3, 3, 3, 3, cv2.BORDER_CONSTANT, value=0)
+    roi = np.reshape(roi, (28, 28, 1))
+    return roi
+
+
+def extract_components(image):
     n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(image, connectivity=8)
     roi_list = []
     for label in range(1, n_labels):
@@ -68,14 +76,29 @@ def extract_digits(image):
 
         roi = np.array(roi, dtype=np.uint8)
         if roi.size > 0:
-            roi = cv2.resize(roi, (22, 22))
-            roi = 255 - roi
-            roi = cv2.copyMakeBorder(roi, 3, 3, 3, 3, cv2.BORDER_CONSTANT, value=0)
-            roi = np.reshape(roi, (28, 28, 1))
-
+            roi = resize_roi(roi)
             roi_list.append(roi)
     return roi_list
 
+
+def extract_digits(image):
+    image = preprocess_image(image)
+
+    percentage_image = cv2.imread(MEDIA_ROOT + 'percentage.png', cv2.IMREAD_GRAYSCALE)
+    image = remove_template_from_image(image, percentage_image)
+    return extract_components(image)
+
+
+def read_number_from_digit_images(digit_list):
+    if len(digit_list) > 0:
+        num = 0
+        i = 0
+        for digit_image in digit_list[::-1]:
+            digit = classify_digit(digit_image)
+            if digit != -1:
+                num += digit * 10 ** i
+                i += 1
+        return num
 
 count = 0
 while "Screen capturing":
@@ -88,25 +111,17 @@ while "Screen capturing":
 
     # preprocess accuracy_image
     roi_list = extract_digits(accuracy_image)
+    num = read_number_from_digit_images(roi_list)
 
-    if len(roi_list) > 0:
-        num = 0
-        i = 0
-        for roi in roi_list[::-1]:
-            digit = classify_digit(roi)
-            if digit != -1:
-                num += digit * 10 ** i
-                i += 1
-
-        white = np.full((28, 28, 1), 255, dtype=np.uint8)
-        img = cv2.vconcat([white] + roi_list)
-        img = cv2.putText(img, str(num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
-        cv2.imshow("rois and number", img)
-        print(num)
-        if cv2.waitKey(25) & 0xFF == ord("s"):
-            for roi in roi_list:
-                cv2.imwrite(f"number_{count}.png", roi)
-                count += 1
+    white = np.full((28, 28, 1), 255, dtype=np.uint8)
+    img = cv2.vconcat([white] + roi_list)
+    img = cv2.putText(img, str(num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+    cv2.imshow("rois and number", img)
+    print(num)
+    if cv2.waitKey(25) & 0xFF == ord("s"):
+        for roi in roi_list:
+            cv2.imwrite(f"number_{count}.png", roi)
+            count += 1
 
     print("fps: {}".format(1 / (time.time() - last_time)))
 
