@@ -109,31 +109,39 @@ def read_number_from_digit_images(digit_list):
 
 
 count = 0
+
+
+def debug_view_rois(rois, num, screen_name, save_character):
+    global count
+
+    white = np.full((28, 28, 1), 255, dtype=np.uint8)
+    img = cv2.vconcat([white] + rois)
+    img = cv2.putText(img, str(num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+    cv2.imshow(screen_name, img)
+    print(num)
+    if cv2.waitKey(25) & 0xFF == ord(save_character):
+        for roi in rois:
+            cv2.imwrite(f"number_{count}.png", roi)
+            count += 1
+
+
 while "Screen capturing":
     last_time = time.time()
 
     # Get raw pixels from the screen, save it to a Numpy array
     accuracy_image = np.array(sct.grab(accuracy_rect))
     damage_image = np.array(sct.grab(damage_rect))
-    # tokens_image = np.array(sct.grab(tokens_rect))
+    tokens_image = np.array(sct.grab(tokens_rect))
 
     # preprocess accuracy_image
     roi_list = extract_digits(accuracy_image, additional_preprocessing=remove_percentage)
     num = read_number_from_digit_images(roi_list)
+    debug_view_rois(roi_list, num, "accuracy", "s")  # debug
 
     # preprocess damage_image
     damage_rois = extract_digits(damage_image)
     damage_num = read_number_from_digit_images(damage_rois)
-
-    white = np.full((28, 28, 1), 255, dtype=np.uint8)
-    img = cv2.vconcat([white] + damage_rois)
-    img = cv2.putText(img, str(damage_num), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
-    cv2.imshow("rois and number", img)
-    print(damage_num)
-    if cv2.waitKey(25) & 0xFF == ord("s"):
-        for roi in damage_rois:
-            cv2.imwrite(f"number_{count}.png", roi)
-            count += 1
+    debug_view_rois(damage_rois, damage_num, "damage", "p")  # debug
 
     print("fps: {}".format(1 / (time.time() - last_time)))
 
