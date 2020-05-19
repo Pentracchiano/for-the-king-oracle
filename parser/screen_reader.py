@@ -16,6 +16,28 @@ NUMBERS_ROOT = os.path.join(MEDIA_ROOT, 'numbers')
 TOKENS_ROOT = os.path.join(MEDIA_ROOT, 'tokens')
 
 
+def get_accuracy():
+    accuracy_image = np.array(sct.grab(accuracy_rect))
+    roi_list = extract_digits(accuracy_image, additional_preprocessing=remove_percentage)
+    return read_number_from_digit_images(roi_list) / 100
+
+
+def get_damage():
+    damage_image = np.array(sct.grab(damage_rect))
+    damage_rois = extract_digits(damage_image)
+    damage_num = read_number_from_digit_images(damage_rois)
+    return damage_num
+
+
+def get_tokens():
+    tokens_image = np.array(sct.grab(tokens_rect))
+    non_focused_tokens = count_tokens(tokens_image)
+    return non_focused_tokens
+
+
+# UTILITY METHODS
+
+
 def check_similarity(image1, image2):
     return cv2.matchTemplate(image1, image2, cv2.TM_CCORR)[0][0]
 
@@ -177,34 +199,3 @@ def count_tokens(image):
 
     return len(filtered_points) - focused
 
-
-while "Screen capturing":
-    last_time = time.time()
-
-    # Get raw pixels from the screen, save it to a Numpy array
-    accuracy_image = np.array(sct.grab(accuracy_rect))
-    damage_image = np.array(sct.grab(damage_rect))
-    tokens_image = np.array(sct.grab(tokens_rect))
-
-    # preprocess accuracy_image
-    roi_list = extract_digits(accuracy_image, additional_preprocessing=remove_percentage)
-    num = read_number_from_digit_images(roi_list)
-    # debug_view_rois(roi_list, num, "accuracy", "s")  # debug
-
-    # preprocess damage_image
-    damage_rois = extract_digits(damage_image)
-    damage_num = read_number_from_digit_images(damage_rois)
-    # debug_view_rois(damage_rois, damage_num, "damage", "p")  # debug
-
-    non_focused_tokens = count_tokens(tokens_image)
-
-    print("TEMPLATES:", non_focused_tokens)
-    # for pt in filtered_points:
-    #     cv2.rectangle(tokens_image, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
-
-    print("fps: {}".format(1 / (time.time() - last_time)))
-
-    # Press "q" to quit
-    if cv2.waitKey(25) & 0xFF == ord("q"):
-        cv2.destroyAllWindows()
-        break
