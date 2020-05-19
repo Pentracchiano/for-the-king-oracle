@@ -2,7 +2,6 @@ import math
 import mss
 import cv2
 import numpy as np
-import time
 import os
 
 sct = mss.mss()
@@ -11,7 +10,8 @@ tokens_rect = {"top": 480, "left": 700, "width": 550, "height": 100}
 damage_rect = {"top": 725, "left": 810, "width": 100, "height": 45}
 accuracy_rect = {"top": 725, "left": 960, "width": 130, "height": 45}
 
-MEDIA_ROOT = 'media'
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+MEDIA_ROOT = os.path.join(DIR_PATH, 'media')
 NUMBERS_ROOT = os.path.join(MEDIA_ROOT, 'numbers')
 TOKENS_ROOT = os.path.join(MEDIA_ROOT, 'tokens')
 
@@ -19,14 +19,15 @@ TOKENS_ROOT = os.path.join(MEDIA_ROOT, 'tokens')
 def get_accuracy():
     accuracy_image = np.array(sct.grab(accuracy_rect))
     roi_list = extract_digits(accuracy_image, additional_preprocessing=remove_percentage)
-    return read_number_from_digit_images(roi_list) / 100
+    accuracy = read_number_from_digit_images(roi_list)
+    return accuracy / 100 if accuracy is not None else -1
 
 
 def get_damage():
     damage_image = np.array(sct.grab(damage_rect))
     damage_rois = extract_digits(damage_image)
     damage_num = read_number_from_digit_images(damage_rois)
-    return damage_num
+    return damage_num if damage_num is not None else -1
 
 
 def get_tokens():
@@ -130,6 +131,8 @@ def read_number_from_digit_images(digit_list):
                 num += digit * 10 ** i
                 i += 1
         return num
+
+    return None
 
 
 count = 0

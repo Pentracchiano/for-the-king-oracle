@@ -146,45 +146,14 @@ class Encounter:
 
 
 if __name__ == "__main__":
-    enemy1 = Character(42, 3, 2)
-    enemy2 = Character(10, 1, 0)
+    enemy1 = Character(55, 0, 0)
     attack = Attack(21, 0.78, 4, True)
-    encounter = Encounter([enemy1, enemy2])
+    encounter = Encounter([enemy1])
 
-    p1 = list(encounter.get_damage_cumulative_probabilities(attack, 0))
-    p2 = list(encounter.get_damage_cumulative_probabilities(attack, 1))
+    print("cumulative probabilites:", encounter.get_damage_cumulative_probabilities(attack, 0))
+    print("exact probabilites:", encounter.get_damage_exact_probabilities(attack, 0))
 
-    testp1 = 0
-    for item in p1:
-        testp1 += item["probability"]
+    print("expected damage:", encounter.expected_damage(attack, 0))
 
-    testp2 = 0
-    for item in p2:
-        testp2 += item["probability"]
-
-    print(testp1, testp2)
-
-    print("\n\n")
-
-    p1 = list(encounter.get_damage_exact_probabilities(attack, 0))
-    p2 = list(encounter.get_damage_exact_probabilities(attack, 1))
-
-    testp1 = 0
-    for item in p1:
-        testp1 += item["probability"]
-
-    testp2 = 0
-    for item in p2:
-        testp2 += item["probability"]
-
-    print(p1)
-    print(p2)
-    print(testp1, testp2)
-
-    print("\n")
-
-    print(encounter.expected_damage(attack, 0))
-    print(encounter.expected_damage(attack, 1))
-
-    print(encounter.get_kill_probability(attack, 1))
-    print(encounter.get_fail_probability(attack, 1))
+    print("kill:", encounter.get_kill_probability(attack, 0))
+    print("fail:", encounter.get_fail_probability(attack, 0))
