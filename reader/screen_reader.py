@@ -194,10 +194,9 @@ def count_tokens(image):
     for pt in filtered_points:
         roi = image[pt[1]:pt[1] + h, pt[0]:pt[0] + w]
         # the focus is just presence of yellow:
-        gr_avg = np.mean(roi, (0, 1))[1:3]
-        yellow = gr_avg[0] + gr_avg[1]
-
-        if yellow > 170:
+        gr_sum = np.sum(roi, (0, 1))[1:3]
+        yellow = gr_sum[0] + gr_sum[1]
+        if yellow >= 875000:
             focused += 1
 
     return len(filtered_points) - focused
