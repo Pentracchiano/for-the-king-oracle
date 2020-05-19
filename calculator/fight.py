@@ -41,7 +41,7 @@ class Attack:
         self._probability_per_token = probability_per_token
         self._max_tokens = max_tokens
         self._is_physical = is_physical
-        self._damage_per_token = total_damage / max_tokens
+        self._damage_per_token = total_damage / max_tokens if max_tokens != 0 else 0
         self._is_splash = is_splash
 
     @property
@@ -134,6 +134,7 @@ class Encounter:
         return probability_to_kill
 
     def expected_damage(self, attack: Attack, enemy_position: int) -> float:
+        # todo probably should account for focus to give better estimate
         expected_damage = 0
         for damage_probability in self.get_damage_exact_probabilities(attack, enemy_position):
             expected_damage += damage_probability["probability"] * damage_probability["damage"]
