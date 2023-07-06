@@ -10,4 +10,4 @@ PyInstaller==3.4
 PyQt5==5.14.2
 PyQt5-sip==12.7.2
 pywin32-ctypes==0.2.0
-scipy==1.4.1
+scipy==1.10.0
