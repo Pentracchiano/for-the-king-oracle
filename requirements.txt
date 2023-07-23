@@ -6,7 +6,7 @@ mss==5.1.0
 numpy==1.18.4
 opencv-python==4.2.0.34
 pefile==2019.4.18
-PyInstaller==3.4
+PyInstaller==3.6
 PyQt5==5.14.2
 PyQt5-sip==12.7.2
 pywin32-ctypes==0.2.0
